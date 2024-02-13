@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import apiClient from "../services/api-client";
-import { CanceledError } from "axios";
+import { AxiosRequestConfig, CanceledError } from "axios";
 
 
 interface FetchResponse<T> {
@@ -8,7 +9,7 @@ interface FetchResponse<T> {
   results: T[];
 }
 
-const useData = <T>(enpoint: string) => {
+const useData = <T>(enpoint: string, requestConfig?: AxiosRequestConfig, deps? : any[]) => {
   const [data, Data] = useState<T[]>([]);
   const [error, setError] = useState("");
   const [isloading, setLoading] = useState(false);
@@ -18,7 +19,7 @@ const useData = <T>(enpoint: string) => {
 
     setLoading(true)
     apiClient
-      .get<FetchResponse<T>>(enpoint, { signal: controller.signal })
+      .get<FetchResponse<T>>(enpoint, { signal: controller.signal, ...requestConfig })
       .then((res) => {Data(res.data.results); setLoading(false)})
       .catch((err) => {
         if (err instanceof CanceledError) return;
@@ -27,7 +28,7 @@ const useData = <T>(enpoint: string) => {
       });
 
     return () => controller.abort();
-  }, []);
+  }, deps ? [...deps]: []);
 
   return { data, error, isloading };
 };
